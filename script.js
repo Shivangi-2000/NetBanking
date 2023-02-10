@@ -87,3 +87,45 @@ const displayMovements = function () {
   });
 };
 displayMovements(account1.movements);
+
+//Create user name
+
+const createUsernames = acnts => {
+  acnts.forEach(acnt => {
+    acnt.username = acnt.owner
+      .toLowerCase()
+      .split(' ')
+      .map(name => name[0])
+      .join('');
+  });
+};
+createUsernames(accounts);
+console.log(accounts);
+
+//calculate balance
+const calcDisplayBalance = function (mavements) {
+  const balance = movements.reduce(function (acc, current, index, arr) {
+    return acc + current;
+  }, 0);
+  labelBalance.textContent = `${balance} EUR`;
+};
+calcDisplayBalance(accounts.mavements);
+
+//Maximun value using reduce
+const max = movements.reduce((acc, mov) => {
+  if (acc > mov) return acc;
+  else return mov;
+}, movements[0]);
+console.log(movements,max);
+
+//filter
+const diposits = movements.filter(function (mov) {
+  return mov > 0;
+});
+console.log(diposits);
+const withdrawals = movements.filter(mov => mov < 0);
+console.log(withdrawals);
+
+//first parameter is accumulator -> SNOWBALL
+// 0 is accumulator's value
+
