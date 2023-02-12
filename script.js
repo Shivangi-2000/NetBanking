@@ -71,12 +71,12 @@ const currencies = new Map([
   ['GBP', 'Pound sterling'],
 ]);
 
-const movements = [200, 450, -400, 3000, -650, -130, 70, 1300];
+//const movements = [200, 450, -400, 3000, -650, -130, 70, 1300];
 
 /////////////////////////////////////////////////
-const displayMovements = function () {
+const displayMovements = function (movement) {
   containerMovements.innerHTML = '';
-  movements.forEach(function (mov, i) {
+  movement.forEach(function (mov, i) {
     const type = mov > 0 ? 'deposit' : 'withdrawal';
     const html = `<div class="movements__row">
     <div class="movements__type movements__type--${type}">${i + 1}
@@ -86,7 +86,6 @@ const displayMovements = function () {
     containerMovements.insertAdjacentHTML('afterbegin', html);
   });
 };
-displayMovements(account1.movements);
 
 //Create user name
 
@@ -102,30 +101,105 @@ const createUsernames = acnts => {
 createUsernames(accounts);
 console.log(accounts);
 
-//calculate balance
-const calcDisplayBalance = function (mavements) {
-  const balance = movements.reduce(function (acc, current, index, arr) {
-    return acc + current;
-  }, 0);
+// calculate balance
+const calcDisplayBalance = function (acc) {
+  const balance = acc.movements.reduce((acc, mov) => acc + mov, 0);
+  acc.balance = balance;
   labelBalance.textContent = `${balance} EUR`;
 };
-calcDisplayBalance(accounts.mavements);
+
+const calcDisplaySummary = function (account) {
+  const incomes = account.movements
+    .filter(mov => mov > 0)
+    .reduce((acc, mov) => acc + mov, 0);
+  labelSumIn.textContent = `${incomes} EUR`;
+
+  const outcomes = account.movements
+    .filter(mov => mov < 0)
+    .reduce((acc, mov) => acc + mov, 0);
+  labelSumOut.textContent = `${Math.abs(outcomes)} EUR`;
+
+  const interest = account.movements
+    .filter(mov => mov > 0)
+    .map(deposit => (deposit * account.interestRate) / 100)
+    .filter(mov => mov >= 1)
+    .reduce((acc, int) => acc + int, 0);
+  labelSumInterest.textContent = `${interest} EUR`;
+};
+
+function updateUI(curr) {
+  // display movement
+  displayMovements(curr.movements);
+  // display balance
+  calcDisplayBalance(curr);
+  // display summary
+  calcDisplaySummary(curr);
+}
+let currentAccount;
+btnLogin.addEventListener('click', function (e) {
+  e.preventDefault();
+
+  currentAccount = accounts.find(
+    acc => acc.username === inputLoginUsername.value
+  );
+
+  if (currentAccount?.pin === Number(inputLoginPin.value)) {
+    console.log(`Login`, currentAccount);
+    labelWelcome.textContent = `Welcome back, ${
+      currentAccount.owner.split(' ')[0]
+    }`;
+
+    containerApp.style.opacity = 100;
+
+    inputLoginUsername.value = inputLoginPin.value = '';
+    inputLoginPin.blur();
+
+    // update UI
+    updateUI(currentAccount);
+  }
+});
+
+//transfer money
+btnTransfer.addEventListener('click', function (e) {
+  e.preventDefault();
+  const amount = Number(inputTransferAmount.value);
+  const receiverAcc = accounts.find(
+    acc => acc.username === inputTransferTo.value
+  );
+  console.log(amount, receiverAcc);
+  inputTransferAmount.value = inputTransferTo.value = '';
+  inputTransferTo.blur();
+
+  if (
+    amount > 0 &&
+    receiverAcc &&
+    currentAccount.balance >= amount &&
+    receiverAcc?.username !== currentAccount.username
+  ) {
+    currentAccount.movements.push(-amount);
+    receiverAcc.movements.push(amount);
+    //Update UI
+    updateUI(currentAccount);
+    console.log(`Transfer done`);
+  }
+});
 
 //Maximun value using reduce
-const max = movements.reduce((acc, mov) => {
-  if (acc > mov) return acc;
-  else return mov;
-}, movements[0]);
-console.log(movements,max);
+// const max = movements.reduce((acc, mov) => {
+//   if (acc > mov) return acc;
+//   else return mov;
+// }, movements[0]);
 
-//filter
-const diposits = movements.filter(function (mov) {
-  return mov > 0;
-});
-console.log(diposits);
-const withdrawals = movements.filter(mov => mov < 0);
-console.log(withdrawals);
+// //filter
+// const diposits = movements.filter(function (mov) {
+//   return mov > 0;
+// });
 
-//first parameter is accumulator -> SNOWBALL
-// 0 is accumulator's value
+// //first parameter is accumulator -> SNOWBALL
+// // 0 is accumulator's value
 
+// const eurToUsd = 1.1;
+// const totalDepositsUSD = movements
+//   .filter(mov => mov > 0)
+//   .map(mov => mov * eurToUsd)
+//   .reduce((acc, mov) => acc + mov, 0);
