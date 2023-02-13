@@ -74,9 +74,11 @@ const currencies = new Map([
 //const movements = [200, 450, -400, 3000, -650, -130, 70, 1300];
 
 /////////////////////////////////////////////////
-const displayMovements = function (movement) {
+const displayMovements = function (movement, sort = false) {
   containerMovements.innerHTML = '';
-  movement.forEach(function (mov, i) {
+  const movs = sort ? movement.slice().sort((a, b) => a - b) : movement;
+
+  movs.forEach(function (mov, i) {
     const type = mov > 0 ? 'deposit' : 'withdrawal';
     const html = `<div class="movements__row">
     <div class="movements__type movements__type--${type}">${i + 1}
@@ -127,6 +129,13 @@ const calcDisplaySummary = function (account) {
   labelSumInterest.textContent = `${interest} EUR`;
 };
 
+let sorted = false;
+btnSort.addEventListener('click', function (e) {
+  e.preventDefault();
+  displayMovements(currentAccount.movements, !sorted);
+  sorted = !sorted;
+});
+
 function updateUI(curr) {
   // display movement
   displayMovements(curr.movements);
@@ -166,7 +175,7 @@ btnTransfer.addEventListener('click', function (e) {
   const receiverAcc = accounts.find(
     acc => acc.username === inputTransferTo.value
   );
-  console.log(amount, receiverAcc);
+
   inputTransferAmount.value = inputTransferTo.value = '';
   inputTransferTo.blur();
 
@@ -182,6 +191,37 @@ btnTransfer.addEventListener('click', function (e) {
     updateUI(currentAccount);
     console.log(`Transfer done`);
   }
+});
+
+btnLoan.addEventListener('click', function (e) {
+  e.preventDefault();
+  const amount = Number(inputLoanAmount.value);
+  if (amount > 0 && currentAccount.movements.some(mov => mov >= amount * 0.1)) {
+    currentAccount.movements.push(amount);
+    //update UI
+    updateUI(currentAccount);
+    inputLoanAmount.value = '';
+  }
+});
+
+btnClose.addEventListener('click', function (e) {
+  e.preventDefault();
+  if (
+    currentAccount?.pin === Number(inputClosePin.value) &&
+    currentAccount?.username === inputCloseUsername.value
+  ) {
+    const index = accounts.findIndex(
+      acc => acc.username === currentAccount.username
+    );
+    accounts.splice(index, 1);
+
+    console.log(accounts, index);
+
+    containerApp.style.opacity = 0;
+
+    console.log(`close account`);
+  }
+  inputClosePin.value = inputCloseUsername.value = '';
 });
 
 //Maximun value using reduce
